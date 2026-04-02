@@ -1,4 +1,4 @@
-package com.example.mediaplayerapp;
+package com.example.mediaplayer;
 
 import android.content.Intent;
 import android.net.Uri;
