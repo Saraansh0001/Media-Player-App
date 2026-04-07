@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.MediaController;
 import android.widget.Toast;
 import android.widget.VideoView;
@@ -14,6 +13,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.textfield.TextInputEditText;
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer;
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener;
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView;
@@ -26,7 +26,7 @@ public class MainActivity extends AppCompatActivity {
     private VideoView videoView;
     private YouTubePlayerView youtubePlayerView;
     private YouTubePlayer activeYouTubePlayer;
-    private EditText urlInput;
+    private TextInputEditText urlInput;
     private Uri mediaUri;
     private boolean isYouTube = false;
 
@@ -94,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void openURL(View view) {
+        if (urlInput.getText() == null) return;
         String url = urlInput.getText().toString().trim();
         if (url.isEmpty()) {
             Toast.makeText(this, "Please enter a URL", Toast.LENGTH_SHORT).show();
