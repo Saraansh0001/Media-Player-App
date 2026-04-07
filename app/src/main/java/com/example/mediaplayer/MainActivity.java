@@ -5,28 +5,38 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.MediaController;
+import android.widget.Toast;
 import android.widget.VideoView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.mediaplayer.R;
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer;
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener;
+import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
 
-    VideoView videoView;
-    EditText urlInput;
-    Uri mediaUri;
+    private VideoView videoView;
+    private YouTubePlayerView youtubePlayerView;
+    private YouTubePlayer activeYouTubePlayer;
+    private EditText urlInput;
+    private Uri mediaUri;
+    private boolean isYouTube = false;
 
-    // ✅ NEW file picker (modern way)
     ActivityResultLauncher<Intent> filePickerLauncher =
             registerForActivityResult(
                     new ActivityResultContracts.StartActivityForResult(),
                     result -> {
                         if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                             mediaUri = result.getData().getData();
-                            videoView.setVideoURI(mediaUri);
+                            playLocalVideo(mediaUri);
                         }
                     });
 
@@ -36,41 +46,115 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         videoView = findViewById(R.id.videoView);
+        youtubePlayerView = findViewById(R.id.youtubePlayerView);
         urlInput = findViewById(R.id.urlInput);
+
+        // Professional touch: Add MediaController for local videos
+        MediaController mediaController = new MediaController(this);
+        mediaController.setAnchorView(videoView);
+        videoView.setMediaController(mediaController);
+
+        getLifecycle().addObserver(youtubePlayerView);
+
+        youtubePlayerView.addYouTubePlayerListener(new AbstractYouTubePlayerListener() {
+            @Override
+            public void onReady(@NonNull YouTubePlayer youtubePlayer) {
+                activeYouTubePlayer = youtubePlayer;
+            }
+        });
     }
 
-    // ✅ Open file from device
+    private void playLocalVideo(Uri uri) {
+        isYouTube = false;
+        youtubePlayerView.setVisibility(View.GONE);
+        videoView.setVisibility(View.VISIBLE);
+        if (activeYouTubePlayer != null) {
+            activeYouTubePlayer.pause();
+        }
+        videoView.setVideoURI(uri);
+        videoView.start();
+    }
+
+    private void playYouTubeVideo(String videoId) {
+        isYouTube = true;
+        videoView.stopPlayback();
+        videoView.setVisibility(View.GONE);
+        youtubePlayerView.setVisibility(View.VISIBLE);
+        if (activeYouTubePlayer != null) {
+            activeYouTubePlayer.loadVideo(videoId, 0);
+        } else {
+            Toast.makeText(this, "YouTube Player initializing...", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     public void openFile(View view) {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("*/*");
+        intent.setType("video/*");
         filePickerLauncher.launch(intent);
     }
 
-    // ✅ Open URL
     public void openURL(View view) {
-        String url = urlInput.getText().toString();
-        mediaUri = Uri.parse(url);
-        videoView.setVideoURI(mediaUri);
+        String url = urlInput.getText().toString().trim();
+        if (url.isEmpty()) {
+            Toast.makeText(this, "Please enter a URL", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String youtubeId = extractYouTubeId(url);
+        if (youtubeId != null) {
+            playYouTubeVideo(youtubeId);
+        } else {
+            mediaUri = Uri.parse(url);
+            playLocalVideo(mediaUri);
+        }
     }
 
-    // ✅ Play
+    private String extractYouTubeId(String url) {
+        String pattern = "(?<=watch\\?v=|/videos/|embed/|youtu.be/|/v/|/e/|watch\\?v%3D|watch\\?feature=player_embedded&v=|%2Fvideos%2F|embed/|youtu.be/|/v/)[^#&?\\n]*";
+        Pattern compiledPattern = Pattern.compile(pattern);
+        Matcher matcher = compiledPattern.matcher(url);
+        if (matcher.find()) {
+            return matcher.group();
+        }
+        return null;
+    }
+
     public void playMedia(View view) {
-        videoView.start();
+        if (isYouTube) {
+            if (activeYouTubePlayer != null) activeYouTubePlayer.play();
+        } else {
+            videoView.start();
+        }
     }
 
-    // ✅ Pause
     public void pauseMedia(View view) {
-        videoView.pause();
+        if (isYouTube) {
+            if (activeYouTubePlayer != null) activeYouTubePlayer.pause();
+        } else {
+            videoView.pause();
+        }
     }
 
-    // ✅ Stop
     public void stopMedia(View view) {
-        videoView.stopPlayback();
+        if (isYouTube) {
+            if (activeYouTubePlayer != null) activeYouTubePlayer.pause();
+        } else {
+            videoView.stopPlayback();
+        }
     }
 
-    // ✅ Restart
     public void restartMedia(View view) {
-        videoView.seekTo(0);
-        videoView.start();
+        if (isYouTube) {
+            if (activeYouTubePlayer != null) activeYouTubePlayer.seekTo(0);
+        } else {
+            videoView.seekTo(0);
+            videoView.start();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        youtubePlayerView.release();
     }
 }
