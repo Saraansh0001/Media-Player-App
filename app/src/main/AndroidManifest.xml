@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+    <!-- till andr 12 and next linr for 13 and above -->
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
 
     <application
