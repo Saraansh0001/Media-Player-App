@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         youtubePlayerView = findViewById(R.id.youtubePlayerView);
         urlInput = findViewById(R.id.urlInput);
 
-        // Professional touch: Add MediaController for local videos
+        // MediaController for local videos
         MediaController mediaController = new MediaController(this);
         mediaController.setAnchorView(videoView);
         videoView.setMediaController(mediaController);
@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
         if (urlInput.getText() == null) return;
         String url = urlInput.getText().toString().trim();
         if (url.isEmpty()) {
-            Toast.makeText(this, "Please enter a URL", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Please enter a valid URL", Toast.LENGTH_SHORT).show();
             return;
         }
 
