@@ -50,7 +50,9 @@
                 android:layout_height="match_parent"
                 android:visibility="gone"
                 app:autoPlay="false" />
+
         </FrameLayout>
+
     </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.textfield.TextInputLayout
